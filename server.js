@@ -1,8 +1,7 @@
 const express = require("express"),
   app = express(),
   sendMessage = require("./twilio-api"),
-  home = require("./routes/home"),
-  bodyParser = require("body-parser");
+  home = require("./routes/home");
 
 app.use(express.urlencoded({ extended: false }));
 
