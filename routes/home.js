@@ -1,49 +1,56 @@
-const express = require("express"),
-  router = express.Router(),
-  sendMessage = require("../twilio-api"),
-  MessagingResponse = require("twilio").twiml.MessagingResponse;
+require("dotenv").config();
+const router = require("express").Router(),
+  _ = require("lodash"),
+  sq = require("../square-client"),
+  tw = require("../twilio-client");
 
 //Handling GET request on home route
 router.get("/", (req, res) => {
-  sendMessage();
   res.send("We in this bitch again!!!!");
 });
 
 //webhook route for message response
-router.post("/sms", (req, res) => {
-  console.log("received a text message...");
-  // console.log(req.body.Body);
-  const twiml = new MessagingResponse();
-  //create text-response
-  twiml.message(
-    {
-      action: "https://7bd6e79eba35.ngrok.io/status",
-    },
-    `Thanks ${req.body.Body}! We will get back to you shortly!`,
-  );
+router.post("/sms", async (req, res) => {
+  let { Body, From, MessageStatus } = req.body,
+    cleanedBody = Body.toLowerCase().trim(),
+    customer;
 
-  //http response to twilio phone client
-  res.writeHead(200, { "Content-Type": "text/xml" });
+  try {
+    const result = await sq.findCustomer(From);
+    //Only respond to registered numbers
+    if (!_.isEmpty(result) && cleanedBody === "charge") {
+      customer = result.customers[0];
+      //create order
+      // console.log("Creating order...");
+      // sq.createOrder(customer.id)
 
-  /*
-  * end http response with text-response
-  converted into a string
-  */
-  res.end(twiml.toString());
+      //process order payment
+      // console.log("Processing payment...");
+
+      //update order status
+      // console.log("order status updated");
+
+      //send success message
+      tw.sendSuccessMessage(customer);
+    }
+
+    //http response to twilio phone client
+    res.writeHead(200, { "Content-Type": "text/xml" });
+
+    /*
+    * end http response with text-response
+    converted into a string
+    */
+    res.end(tw.toString());
+  } catch (error) {
+    console.log(error);
+  }
 });
 
-router.get("/", (req, res) => {
-  sendMessage();
-  res.send("We in this bitch again!!!!");
-});
-
-//webhook route for message response
+//webhook route for message status
 router.post("/status", (req, res) => {
-  console.log("getting delivery status...");
-  const messageStatus = req.body.MessageStatus;
-
-  console.log(`Status: ${messageStatus}`);
-
+  const { MessageStatus } = req.body;
+  if (MessageStatus === "delivered") console.log("text-delivered...");
   res.sendStatus(200);
 });
 
