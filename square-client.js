@@ -7,8 +7,9 @@ const _ = require("lodash"),
     environment: Environment.Sandbox,
     accessToken: SQ_ACCESS_TOKEN_SB,
   }),
-  { customersApi, ordersApi } = sqClient,
-  locationID = "L8PXVCEQ8KZ0F";
+  { customersApi, ordersApi, catalogApi, paymentsApi } = sqClient,
+  locationID = "L8PXVCEQ8KZ0F",
+  objectID = "LU2M3XGZNTEPMGERKID5GGDG";
 
 class SquareAPI {
   static async findCustomer(phoneNumber) {
@@ -28,16 +29,16 @@ class SquareAPI {
     }
   }
 
-  static async createOrder(customerID) {
+  static async createOrder(customerObj, quantity = "1") {
     try {
       const { result } = await ordersApi.createOrder({
         order: {
           locationId: locationID,
-          customerId: customerID,
+          customerId: customerObj.id,
           lineItems: [
             {
-              quantity: "1",
-              catalogObjectId: "LU2M3XGZNTEPMGERKID5GGDG",
+              quantity: quantity,
+              catalogObjectId: objectID,
             },
           ],
         },
@@ -49,8 +50,40 @@ class SquareAPI {
       console.log("createOrderError: ", error);
     }
   }
+  //|| customerObj.cards[0].id
+  static async processPayment(orderObj, customerObj) {
+    try {
+      const { result } = await paymentsApi.createPayment({
+        sourceId: "ccof:customer-card-id-ok",
+        idempotencyKey: uuidv4(),
+        amountMoney: {
+          amount: orderObj.totalMoney.amount,
+          currency: "USD",
+        },
+        autocomplete: true,
+        orderId: orderObj.id,
+        customerId: customerObj.id,
+      });
+      return result.payment;
+    } catch (error) {
+      console.log("paymentError: ", error);
+    }
+  }
 
-  async getLocationID() {}
+  static async updateOrder(orderObj, customerObj) {
+    try {
+      const response = await ordersApi.updateOrder(orderObj.id, {
+        order: {
+          locationId: locationID,
+          customerId: customerObj.id,
+          state: "COMPLETED",
+        },
+        idempotencyKey: uuidv4(),
+      });
+    } catch (error) {
+      console.log("updateError: ", error);
+    }
+  }
 }
 
 module.exports = SquareAPI;

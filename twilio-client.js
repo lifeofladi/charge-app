@@ -4,12 +4,12 @@ const MessagingResponse = require("twilio").twiml.MessagingResponse;
 const twiml = new MessagingResponse();
 
 class TwilioAPI {
-  static sendSuccessMessage(customer) {
+  static sendSuccessMessage(customerObj) {
     twiml.message(
       {
         action: "https://45a7dc134cb2.ngrok.io/status",
       },
-      `Thank you ${customer.nickname}!\n \nYour payment was successful.\n \nA receipt has been sent to your email.\n \n-- DriveTime Services`,
+      `Thank you ${customerObj.nickname}!\n \nYour payment was successful.\n \nA receipt has been sent to your email.\n \n-- DriveTime Services`,
     );
   }
 

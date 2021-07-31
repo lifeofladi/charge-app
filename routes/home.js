@@ -14,24 +14,30 @@ router.post("/sms", async (req, res) => {
   let { Body, From, MessageStatus } = req.body,
     cleanedBody = Body.toLowerCase().trim(),
     customer;
-
   try {
+    console.log("Finding customer...");
     const result = await sq.findCustomer(From);
     //Only respond to registered numbers
     if (!_.isEmpty(result) && cleanedBody === "charge") {
       customer = result.customers[0];
+      // console.log(customer);
+
       //create order
-      // console.log("Creating order...");
-      // sq.createOrder(customer.id)
+      console.log("Creating order...");
+      const order = await sq.createOrder(customer);
+      console.log(order.id);
 
       //process order payment
-      // console.log("Processing payment...");
+      console.log("Processing payment...");
+      const payment = await sq.processPayment(order, customer);
+      if (payment.status === "COMPLETED") {
+        //send success message
+        console.log("Sending response... ");
+        tw.sendSuccessMessage(customer);
 
-      //update order status
-      // console.log("order status updated");
-
-      //send success message
-      tw.sendSuccessMessage(customer);
+        //update order status
+        // console.log("Updating status...");
+      }
     }
 
     //http response to twilio phone client
