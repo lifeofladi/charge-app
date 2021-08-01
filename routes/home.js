@@ -17,16 +17,26 @@ router.post("/sms", async (req, res) => {
   try {
     console.log("Finding customer...");
     const result = await sq.findCustomer(From);
+
     //Only respond to registered numbers
-    if (!_.isEmpty(result) && cleanedBody === "charge") {
+    if (!_.isEmpty(result)) {
       customer = result.customers[0];
-      //process order payment
-      console.log("Processing payment...");
-      const { payment } = await sq.processPayment(customer.id);
-      if (payment.status === "COMPLETED") {
-        //send success message
-        console.log("Sending response... ");
-        tw.sendSuccessMessage(customer);
+
+      switch (cleanedBody) {
+        case "charge":
+          //process order payment
+          console.log("Processing payment...");
+          const { payment } = await sq.processPayment(customer.id);
+          if (payment.status === "COMPLETED") {
+            //send success message
+            console.log("Sending response... ");
+            tw.sendSuccessMessage(customer);
+          }
+          break;
+        case "balance":
+          //get total transactions
+          console.log("Getting transactions ...");
+          const { orders } = await sq.getTotalTransactions(customer.id);
       }
     }
 

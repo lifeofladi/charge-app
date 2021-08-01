@@ -74,6 +74,37 @@ class SquareAPI {
       console.log("createOrderError: ", error);
     }
   }
+
+  //-----------New Feature---------------
+  static async getTotalTransactions(customerID) {
+    const { orders } = await this.prototype.searchOrders(customerID);
+    let customerTransactions = [];
+    orders.forEach(order => customerTransactions.push(order.totalMoney.amount));
+    let totalSpent = customerTransactions.reduce((a, b) => a + b);
+    return totalSpent;
+  }
+
+  async searchOrders(customerID) {
+    try {
+      const { result } = await ordersApi.searchOrders({
+        locationIds: [locationID],
+        query: {
+          filter: {
+            stateFilter: {
+              states: ["COMPLETED"],
+            },
+            customerFilter: {
+              customerIds: [customerID],
+            },
+          },
+        },
+      });
+
+      return result;
+    } catch (error) {
+      console.log("searchError: ", error);
+    }
+  }
 }
 
 module.exports = SquareAPI;
