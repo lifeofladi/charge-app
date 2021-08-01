@@ -6,7 +6,7 @@ const router = require("express").Router(),
 
 //Handling GET request on home route
 router.get("/", (req, res) => {
-  res.send("Welcome, to DriveTime Services server.");
+  res.send("d/b/a DriveTime Services.");
 });
 
 //webhook route for message response
@@ -20,16 +20,9 @@ router.post("/sms", async (req, res) => {
     //Only respond to registered numbers
     if (!_.isEmpty(result) && cleanedBody === "charge") {
       customer = result.customers[0];
-      console.log(customer);
-
-      //create order
-      console.log("Creating order...");
-      const order = await sq.createOrder(customer);
-      // console.log(order.id);
-
       //process order payment
       console.log("Processing payment...");
-      const payment = await sq.processPayment(order, customer);
+      const { payment } = await sq.processPayment(customer.id);
       if (payment.status === "COMPLETED") {
         //send success message
         console.log("Sending response... ");

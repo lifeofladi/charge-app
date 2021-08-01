@@ -29,33 +29,36 @@ class SquareAPI {
     }
   }
 
-  static async processPayment(orderObj, customerObj) {
+  static async processPayment(customerID) {
     try {
-      //Create orderHere
-      //const {order} = await createOrder(customerObj);
+      //Create order
+      console.log("Creating order...");
+      const { order } = await this.prototype.createOrder(customerID);
+
+      //Process payment
       const { result } = await paymentsApi.createPayment({
         sourceId: "ccof:customer-card-id-ok", //|| customerObj.cards[0].id --sourceID(for production)
         idempotencyKey: uuidv4(),
         amountMoney: {
-          amount: orderObj.totalMoney.amount, //order.totalMoney.amount
+          amount: order.totalMoney.amount,
           currency: "USD",
         },
         autocomplete: true,
-        orderId: orderObj.id, //order.id
-        customerId: customerObj.id,
+        orderId: order.id,
+        customerId: customerID,
       });
-      return result.payment;
+      return result;
     } catch (error) {
       console.log("paymentError: ", error);
     }
   }
 
-  static async createOrder(customerObj, quantity = "1") {
+  async createOrder(customerID, quantity = "1") {
     try {
       const { result } = await ordersApi.createOrder({
         order: {
           locationId: locationID,
-          customerId: customerObj.id,
+          customerId: customerID,
           lineItems: [
             {
               quantity: quantity,
@@ -66,24 +69,9 @@ class SquareAPI {
         idempotencyKey: uuidv4(),
       });
 
-      return result.order;
+      return result;
     } catch (error) {
       console.log("createOrderError: ", error);
-    }
-  }
-
-  async updateOrder(orderObj, customerObj) {
-    try {
-      const response = await ordersApi.updateOrder(orderObj.id, {
-        order: {
-          locationId: locationID,
-          customerId: customerObj.id,
-          state: "COMPLETED",
-        },
-        idempotencyKey: uuidv4(),
-      });
-    } catch (error) {
-      console.log("updateError: ", error);
     }
   }
 }
