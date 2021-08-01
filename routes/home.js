@@ -6,7 +6,7 @@ const router = require("express").Router(),
 
 //Handling GET request on home route
 router.get("/", (req, res) => {
-  res.send("We in this bitch again!!!!");
+  res.send("Welcome, to DriveTime Services server.");
 });
 
 //webhook route for message response
@@ -20,12 +20,12 @@ router.post("/sms", async (req, res) => {
     //Only respond to registered numbers
     if (!_.isEmpty(result) && cleanedBody === "charge") {
       customer = result.customers[0];
-      // console.log(customer);
+      console.log(customer);
 
       //create order
       console.log("Creating order...");
       const order = await sq.createOrder(customer);
-      console.log(order.id);
+      // console.log(order.id);
 
       //process order payment
       console.log("Processing payment...");
@@ -34,9 +34,6 @@ router.post("/sms", async (req, res) => {
         //send success message
         console.log("Sending response... ");
         tw.sendSuccessMessage(customer);
-
-        //update order status
-        // console.log("Updating status...");
       }
     }
 
