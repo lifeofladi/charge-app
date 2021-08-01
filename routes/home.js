@@ -1,8 +1,8 @@
 require("dotenv").config();
 const router = require("express").Router(),
   _ = require("lodash"),
-  sq = require("../square-client"),
-  tw = require("../twilio-client");
+  sq = require("../utils/square-client"),
+  tw = require("../utils/twilio-client");
 
 //Handling GET request on home route
 router.get("/", (req, res) => {
