@@ -77,11 +77,20 @@ class SquareAPI {
 
   //-----------New Feature---------------
   static async getTotalTransactions(customerID) {
-    const { orders } = await this.prototype.searchOrders(customerID);
-    let customerTransactions = [];
-    orders.forEach(order => customerTransactions.push(order.totalMoney.amount));
-    let totalSpent = customerTransactions.reduce((a, b) => a + b);
-    return totalSpent;
+    try {
+      const { orders } = await this.prototype.searchOrders(customerID);
+      // console.log(Number(orders[0].totalMoney.amount) );
+
+      let customerTransactions = [];
+      orders.forEach(order =>
+        customerTransactions.push(parseInt(order.totalMoney.amount) * 0.01),
+      );
+      let totalSpent = customerTransactions.reduce((a, b) => a + b);
+
+      return this.prototype.currencyFormat(totalSpent);
+    } catch (error) {
+      console.log("transactionError: ", error);
+    }
   }
 
   async searchOrders(customerID) {
@@ -102,8 +111,17 @@ class SquareAPI {
 
       return result;
     } catch (error) {
-      console.log("searchError: ", error);
+      console.log("searchOrderError: ", error);
     }
+  }
+
+  currencyFormat(amount) {
+    let formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
+
+    return formatter.format(amount);
   }
 }
 

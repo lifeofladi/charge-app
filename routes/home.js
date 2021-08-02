@@ -36,18 +36,20 @@ router.post("/sms", async (req, res) => {
         case "balance":
           //get total transactions
           console.log("Getting transactions ...");
-          const { orders } = await sq.getTotalTransactions(customer.id);
+          const balance = await sq.getTotalTransactions(customer.id);
+          tw.sendBalanceMessage(customer, balance);
+          break;
+
+        // console.log(balance);
       }
+      //http response to twilio phone client
+      res.writeHead(200, { "Content-Type": "text/xml" });
+      /*
+      * end http response with text-response
+      converted into a string
+      */
+      res.end(tw.toString());
     }
-
-    //http response to twilio phone client
-    res.writeHead(200, { "Content-Type": "text/xml" });
-
-    /*
-    * end http response with text-response
-    converted into a string
-    */
-    res.end(tw.toString());
   } catch (error) {
     console.log(error);
   }
